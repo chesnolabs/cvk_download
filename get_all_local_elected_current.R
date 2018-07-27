@@ -43,48 +43,6 @@ councils_df <- councils %>%
   bind_rows %>% 
   mutate(council = str_trim(council))
 
-
-
-# links0 <- paste0("http://www.cvk.gov.ua/pls/vm2015/PVM002?PT001F01=", 100:500, "&pt00_t001f01=100")
-# 
-# all_links1 <- character()
-# get_links1 <- function(l){
-#   html <- read_html(l)
-#   
-#   links1 <- html %>% 
-#     html_nodes("#result .a1small") %>% 
-#     html_attr("href")
-#   links1 <- paste0("http://www.cvk.gov.ua/pls/vm2015/", links1)
-#   all_links1 <- c(all_links1, links1)
-#   print(paste("got", length(links1), "links"))
-#   Sys.sleep(0.1)
-#   return(all_links1)
-# }
-# 
-# all_links1 <- map(links0, possibly(get_links1, otherwise = NA))
-# all_links1_clean <- unlist(all_links1)
-# all_links1_clean <- all_links1_clean[!is.na(all_links1_clean)&all_links1_clean!="http://www.cvk.gov.ua/pls/vm2015/"]
-# 
-# all_links2 <- character()
-# get_links2 <- function(l){
-#   html <- read_html(l)
-#   
-#   links2 <- html %>% 
-#     html_nodes(".a1") %>% 
-#     html_attr("href")
-#   links2 <- paste0("http://www.cvk.gov.ua/pls/vm2015/", links2)
-#   all_links2 <- c(all_links2, links2)
-#   print(paste("got", length(links2), "links"))
-#   Sys.sleep(0.1)
-#   return(all_links2)
-# }
-# 
-# all_links2 <- map(all_links1_clean, possibly(get_links2, otherwise = NA)) 
-# all_links2_clean <- unlist(all_links2)
-# all_links2_clean <- all_links2_clean[!is.na(all_links1_clean)]
-
-# adapt this to actual deputies!! 
-
 get_local_deputies <- function(link){
   
   print(link)
