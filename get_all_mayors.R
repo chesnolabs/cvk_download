@@ -3,26 +3,14 @@ library(rvest)
 library(stringr)
 library(openxlsx)
 Sys.setenv("R_ZIPCMD" = "C:/Rtools/bin/zip.exe") # set correct Rtools path here
+mayors <- read_csv("output/all_mayors.csv")
 
-links0 <- paste0("http://www.cvk.gov.ua/pls/vm2015/PVM003?PT001F01=", 100:500, "&pt00_t001f01=100")
+link0 <- "http://www.cvk.gov.ua/pls/vm2015/PVM004?pt001f01=100"
 
-all_links1 <- character()
-get_links1 <- function(l){
-  html <- read_html(l)
-  
-  links1 <- html %>% 
+links <- read_html(link0) %>% 
     html_nodes("#result .a1small") %>% 
-    html_attr("href")
-  links1 <- paste0("http://www.cvk.gov.ua/pls/vm2015/", links1)
-  all_links1 <- c(all_links1, links1)
-  print(paste("got", length(links1), "links"))
-  Sys.sleep(0.1)
-  return(all_links1)
-}
-
-all_links1 <- map(links0, possibly(get_links1, otherwise = NA))
-all_links1_clean <- unlist(all_links1)
-all_links1_clean <- all_links1_clean[!is.na(all_links1_clean)&all_links1_clean!="http://www.cvk.gov.ua/pls/vm2015/"]
+    html_attr("href") %>%
+    paste0("http://www.cvk.gov.ua/pls/vm2015/", .)
 
 get_mayors <- function(link){
   
@@ -162,16 +150,19 @@ get_mayors <- function(link){
       results <- results %>% select(-X5)
     }
     
-    }
+  }
+  
+  results$oblast <- read_html(link) %>% 
+    html_nodes(".p2") %>% 
+    html_text()
+  results$link <- link
   
   print(paste0(results$region[1], ", ", control, ", ", results$el_date[1], " - ", nrow(results), " ос."))
   Sys.sleep(0.05)
   return(results)
 }
 
-# rm(results, el, control_df, html3, res_numbers, winner)
-# test <- get_mayors("http://www.cvk.gov.ua/pls/vm2015/PVM038?PT001F01=101&PT00_T001F01=100&pid111=61&pid100=5&rej=0")
-all_mayors <- map(all_links1_clean, get_mayors)
+all_mayors <- map(links, get_mayors)
 # map(all_mayors, ~nrow(.))
 
 all_mayors_df <- map_df(all_mayors, as.data.frame)
@@ -180,13 +171,13 @@ all_mayors_df <- all_mayors_df %>%
   mutate(council_type = ifelse(str_detect(council, "міська"), "міська",
                               ifelse(str_detect(council, "районна рада"), "районна",
                                     ifelse(str_detect(council, "селищна"), "селищна",
-                                          ifelse(str_detect(council, "сільська"), "сільська", NA))))) %>% 
-  select(fullname:region, council_type, everything())
+                                          ifelse(str_detect(council, "сільська"), "сільська", NA)))),
+         oblast = str_remove(oblast, " область")) %>% 
+  select(fullname, oblast, region, council:vote_percent, link)
 
-all_mayors_df <- all_mayors_df %>% 
-  separate(council, into = c("rayon", "council"), sep = ", ", fill = "right") %>% 
-  unite(council, council, rayon, sep = ", ") %>%
-  mutate(council = str_replace(council, "NA, ", ""))
+test <- all_mayors_df %>% 
+  separate(council, into = c("rayon", "council"), sep = ", ", fill = "left") %>% 
+  select(-rayon)
 
 all_mayors$council_type[grepl("міська сільська", all_mayors$council)] <- "сільська"
 
