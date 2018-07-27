@@ -4,7 +4,7 @@ library(stringr)
 library(openxlsx)
 Sys.setenv("R_ZIPCMD" = "C:/Rtools/bin/zip.exe") # set correct Rtools path here
 
-main_link <- "http://www.cvk.gov.ua/pls/vm2015/PVM005?PT001F01=451&pt00_t001f01=100"
+main_link <- "http://www.cvk.gov.ua/pls/vm2015/PVM005?PT001F01=100&pt00_t001f01=100"
 links_by_type <- read_html(main_link) %>% 
   html_nodes("#result .a1small") %>% 
   html_attr("href")
