@@ -174,20 +174,26 @@ get_local_deputies <- function(link){
         select(-country) %>% 
         select(id_in_council:fullname, el_type:nominated_by, everything())
     }}
+  results <- results %>% mutate(link_council = link)
   
   print(paste0(results$council[1], ", ", results$el_date[1], " - ", nrow(results), " деп."))
   Sys.sleep(0.05)
   return(results)
 }
 
-all_deputies <- map(all_links2_clean, possibly(get_local_deputies, otherwise = NA))
+all_deputies <- map(councils_df$link_council, possibly(get_local_deputies, otherwise = NA))
 
 index_empty <- map(all_deputies, ~length(.) == 0) %>% unlist %>% which()
-all_deputies_clean <- all_deputies[-index_empty]
+if(length(index_empty) > 0){
+  all_deputies_clean <- all_deputies[-index_empty]
+} else {
+  all_deputies_clean <- all_deputies
+}
 all_deputies_df <- map_df(all_deputies_clean, as.data.frame) %>% 
   select(-`.x[[i]]`) %>% 
   filter(!(fullname %in% c("Рада увійшла до складу об’єднаної громади",
-                         "Вибори не відбулися") | is.na(fullname)))
+                         "Вибори не відбулися") | is.na(fullname))) %>% 
+  select(-el_date, -el_type)
 
 all_deputies_df <- all_deputies_df %>% 
   mutate(council_type = ifelse(str_detect(council, "обласна"), "обласна",
@@ -198,6 +204,15 @@ all_deputies_df <- all_deputies_df %>%
                                                            ifelse(str_detect(council, "сільська"), "сільська", NA))))))) %>% 
   select(id_in_council:region, council_type, everything())
 all_deputies_df$council_type[grepl("міська сільська", all_deputies_df$council)] <- "сільська"
+
+all_deputies_df <- all_deputies_df %>% left_join(
+          councils_df_to_join[, c("link_council", "oblast")], 
+          by = c("link_council")) %>% 
+  mutate(oblast = str_remove(oblast, " область"))
+
+all_deputies_df %>% count(oblast, sort = T)
+test <- all_deputies_df %>% 
+  sample_n(20)
 
 write_csv(all_deputies_df, "output/all_deputies.csv")
 
