@@ -183,6 +183,6 @@ write_csv(all_mayors_df, "output/all_mayors.csv")
 
 deputieswb <- createWorkbook("output/all_mayors.xlsx")
 addWorksheet(deputieswb, "Голови міст і сіл")
-writeDataTable(deputieswb, "Голови міст і сіл", all_mayors, withFilter = F, rowNames = F)
+writeDataTable(deputieswb, "Голови міст і сіл", all_mayors_df, withFilter = F, rowNames = F)
 saveWorkbook(deputieswb, "output/all_mayors.xlsx", overwrite = TRUE)
 
