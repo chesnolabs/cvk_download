@@ -165,19 +165,17 @@ get_mayors <- function(link){
 all_mayors <- map(links, get_mayors)
 # map(all_mayors, ~nrow(.))
 
-all_mayors_df <- map_df(all_mayors, as.data.frame)
-
-all_mayors_df <- all_mayors_df %>% 
+all_mayors_df <- map_df(all_mayors, as.data.frame) %>% 
   mutate(council_type = ifelse(str_detect(council, "міська"), "міська",
                               ifelse(str_detect(council, "районна рада"), "районна",
                                     ifelse(str_detect(council, "селищна"), "селищна",
                                           ifelse(str_detect(council, "сільська"), "сільська", NA)))),
          oblast = str_remove(oblast, " область")) %>% 
-  select(fullname, oblast, region, council:vote_percent, link)
-
-test <- all_mayors_df %>% 
-  separate(council, into = c("rayon", "council"), sep = ", ", fill = "left") %>% 
-  select(-rayon)
+  select(fullname, oblast, region, council:vote_percent, link) %>% 
+  mutate(region = case_when(
+    !str_detect(region, "обл|р-н") ~ str_extract(council, ".*(?=,)"),
+    TRUE ~ region),
+         council = str_remove(council, ".*, "))
 
 all_mayors$council_type[grepl("міська сільська", all_mayors$council)] <- "сільська"
 
